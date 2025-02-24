@@ -12,7 +12,6 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import MultiLabelBinarizer, MinMaxScaler
 import numpy as np
 
-# Criar o banco de dados expandido
 data = [
     {"id": 1, "titulo": "Matrix", "generos": ["Ação", "Ficção Científica"], "popularidade": 8.7},
     {"id": 2, "titulo": "Vingadores", "generos": ["Ação", "Aventura"], "popularidade": 8.0},
@@ -43,41 +42,29 @@ data = [
 
 df = pd.DataFrame(data)
 
-# Converter gêneros em variáveis binárias (one-hot encoding)
 mlb = MultiLabelBinarizer()
 generos_encoded = mlb.fit_transform(df["generos"])
 generos_df = pd.DataFrame(generos_encoded, columns=mlb.classes_)
 
-# Normalizar a popularidade para ficar entre 0 e 1
 scaler = MinMaxScaler()
 df["popularidade_norm"] = scaler.fit_transform(df[["popularidade"]])
 
-# Criar o dataset final para o KNN (juntando gêneros e popularidade)
 X = pd.concat([generos_df, df[["popularidade_norm"]]], axis=1)
 
-# Treinar o modelo KNN
 knn = NearestNeighbors(n_neighbors=3, metric="euclidean")
 knn.fit(X)
 
-# Função para recomendar filmes com base em entrada do usuário
 def recomendar_filmes_knn(preferencias_usuario, popularidade_usuario, num_recomendacoes=3):
-    # Ajustar entrada do usuário: remover espaços extras e padronizar para maiúsculas/minúsculas corretas
     preferencias_usuario = [g.strip().capitalize() for g in preferencias_usuario]
 
-    # Criar vetor de entrada do usuário
     genero_usuario = [1 if g in preferencias_usuario else 0 for g in mlb.classes_]
     popularidade_usuario_norm = scaler.transform([[popularidade_usuario]])[0][0]
     entrada_usuario = np.array(genero_usuario + [popularidade_usuario_norm]).reshape(1, -1)
-
-    # Encontrar os filmes mais próximos
     distancias, indices = knn.kneighbors(entrada_usuario, n_neighbors=num_recomendacoes)
-
-    # Retornar os filmes recomendados
     recomendacoes = df.iloc[indices[0]][["titulo", "generos", "popularidade"]]
     return recomendacoes
 
-# Entrada do usuário
-entrada_generos = input("Opção de gêneros:\n"
+entrada_generos = input("Opçãoo de gêneros:\n"
                         "Ação\n"
                         "Animação\n"
                         "Aventura\n"
@@ -91,12 +78,9 @@ entrada_generos = input("Opção de gêneros:\n"
                         "Romance\n"
                         "Suspense\n"
                         "Terror\n"
-                        "Digite os gêneros desejados separados por vírgula (ex: ação, drama): ")
-entrada_popularidade = float(input("Digite a popularidade desejada (ex: 8.0): "))
+                        "Digite os gêneroos desejados separados por vírgula (ex: ação, drama): ")
+entrada_popularidade = float(input("Digite a popularidade desejada: "))
 
-# Processar entrada do usuário
 preferencias_usuario = entrada_generos.split(",")
-
-# Recomendar filmes
-print("\n🎬 Filmes recomendados:")
+print("\n Filmes recomendados:")
 print(recomendar_filmes_knn(preferencias_usuario, entrada_popularidade))
